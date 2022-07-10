@@ -1,4 +1,3 @@
-from click import get_app_dir
 import requests
 from bs4 import BeautifulSoup
 import csv
