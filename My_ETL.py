@@ -36,9 +36,6 @@ def get_data_api(list_pokemon, type):
     pokemon_list = []
     for pokemon in tqdm (list_pokemon, desc="Loading…", ascii=False, ncols=100):
         headers = {
-            # 'Accept-Encoding': 'gzip, deflate, br',
-            # Already added when you pass json=
-            # 'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Connection': 'keep-alive',
             'DNT': '1',
@@ -49,10 +46,19 @@ def get_data_api(list_pokemon, type):
         }
 
         response = requests.post('https://graphqlpokemon.favware.tech/', headers=headers, json=json_data)
-        json = response.json()
+        json_response = response.json()
         try:
-            if type in json['data']['getPokemon']['types'][0]:
-                pokemon_list.append(pokemon)
+            if type in json_response['data']['getPokemon']['types'][0]:
+                    my_poke_dict = {
+                        'Pokémon': pokemon,
+                        'HP': json_response['data']['getPokemon']['baseStats']['hp'],
+                        'Ataque': json_response['data']['getPokemon']['baseStats']['attack'],
+                        'Defesa': json_response['data']['getPokemon']['baseStats']['defense'],
+                        'SP Attack': json_response['data']['getPokemon']['baseStats']['specialattack'],
+                        'SP Defense': json_response['data']['getPokemon']['baseStats']['specialdefense'],
+                        'Info Bulbapédia':json_response['data']['getPokemon']['bulbapediaPage']
+                    }
+                    pokemon_list.append(my_poke_dict)
         except KeyError:
             pass
     return pokemon_list
@@ -81,9 +87,11 @@ def load_csv(api, type):
     (Lembrando que o pokémon tem que constar na lista de requisição)
     '''
     with open(f'pokemons_{type}_list.csv', 'w', encoding='utf8', newline='') as csv_file:
-        writer = csv.writer(csv_file, delimiter=';')
-        for nome in api:
-            writer.writerow([nome])
+        fieldnames = list(api[0].keys())
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for dict_key in api:
+            writer.writerow(dict_key)
 
 
 def main():
